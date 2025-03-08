@@ -1,0 +1,120 @@
+authentik:
+  authentik:
+      error_reporting:
+          enabled: false
+      postgresql:
+          host: file:///opt/authentik/postgres/host
+          username: file:///opt/authentik/postgres/username
+          password: file:///opt/authentik/postgres/password
+
+  server:
+      ingress:
+          enabled: false
+      volumes:
+          - name: postgres-creds
+            secret:
+              secretName: authentik-postgres
+      volumeMounts:
+          - name: postgres-creds
+            mountPath: /opt/authentik/postgres
+            readOnly: true
+      envFrom:
+          - secretRef:
+              name: authentik-admin
+
+  postgresql:
+      enabled: false
+  redis:
+      enabled: true
+  worker:
+      volumes:
+          - name: postgres-creds
+            secret:
+              secretName: authentik-postgres
+      volumeMounts:
+          - name: postgres-creds
+            mountPath: /opt/authentik/postgres
+            readOnly: true
+      envFrom:
+          - secretRef:
+              name: authentik-admin
+
+helm-charts:
+  name: authentik
+  namespace: authentik
+  deployments:
+    - name: db
+      image: postgres:12.17
+      replicas: 1
+      ports:
+        - containerPort: 5432
+          protocol: TCP
+          name: db
+      liveness: 
+        enable: "False"
+      readiness:
+        enable: "False"
+      resources:
+        requests:
+          cpu: 500m
+          memory: 200M
+        limits:
+          cpu: 1000m
+          memory: 500M
+      volume_mounts:
+        - name: db-storage-nfs
+          mountPath: /var/lib/postgresql/data
+      volumes:
+        - name: db-storage-nfs
+          claimName: db-storage-nfs
+      env:
+        - name: PGDATA
+          value: "/var/lib/postgresql/data/authentik"
+      args: []
+      configMounts: []
+      secretMounts: []
+      envSecrets:
+        - name: POSTGRES_PASSWORD
+          secretName: database-credentials
+          secretKey: POSTGRES_PASSWORD
+        - name: POSTGRES_USER
+          secretName: database-credentials
+          secretKey: POSTGRES_USER
+        - name: POSTGRES_DB
+          secretName: database-credentials
+          secretKey: POSTGRES_DB
+      securityContext:
+        capabilities:
+          add: []
+      command: []
+  services:
+    - name: db
+      type: ClusterIP
+      ports:
+        - port: 5432
+          protocol: TCP
+          name: db
+      selector:
+        app: db
+      annotations: []
+  nfs:
+    - name: db-storage-nfs
+      storage: 1Gi
+  ingresses:
+    - name: authentik-server
+      commonName: auth.tjth.co
+      secretName: auth-tjth-co
+      port: 80
+      publicService: true
+
+k8s-backer-upper:
+  schedule: "0 20 * * *"
+  namespace: authentik
+  imagePullSecret: registry-authentik
+  secretName: database-credentials
+  sshSecretName: backup-ssh-key
+  remote:
+      user: root # The user to use to connect to the remote host
+      host: 192.168.0.200 # The remote host to connect to
+      path: /data/server-backups/authentik
+  backupService: postgres

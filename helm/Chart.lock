@@ -1,0 +1,12 @@
+dependencies:
+- name: authentik
+  repository: https://charts.goauthentik.io
+  version: 2025.2.1
+- name: helm-charts
+  repository: oci://ghcr.io/tjtharrison
+  version: 1.13.0
+- name: k8s-backer-upper
+  repository: oci://ghcr.io/tjtharrison
+  version: 1.2.5
+digest: sha256:9d05efc6654c5fc7d52630a3b6373e86829779878d094deef3b162bf5a86eee3
+generated: "2025-03-08T20:44:40.533712Z"

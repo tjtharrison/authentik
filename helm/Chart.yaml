@@ -1,0 +1,16 @@
+apiVersion: v2
+name: authentik
+description: A helm chart to deploy authentik into Kubernetes
+type: application
+version: 1.0.0
+appVersion: v1.2.2
+dependencies:
+  - name: authentik
+    version: 2025.2.1
+    repository: https://charts.goauthentik.io
+  - name: helm-charts
+    version: 1.13.0
+    repository: oci://ghcr.io/tjtharrison
+  - name: k8s-backer-upper
+    version: 1.2.5
+    repository: oci://ghcr.io/tjtharrison
